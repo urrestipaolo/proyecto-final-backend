@@ -2,12 +2,19 @@ import { Module } from '@nestjs/common';
 import { createObserveModule } from '@nestjs/observe';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
-import { ProductsModule } from './products/products.module.js';
-import { UsersModule } from './users/users.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
-import { AuthModule } from './auth/auth.module.js';
 import { ConfigModule } from '@nestjs/config';
 import { envValidationSchema } from './config/env.validation.js';
+
+import { RolesModule } from './roles/roles.module.js';
+import { CategoriasModule } from './categorias/categoria.module.js';
+import { UsersModule } from './users/users.module.js';
+import { AuthModule } from './auth/auth.module.js';
+import { ProductosModule } from './productos/productos.module.js';
+import { VentasModule } from './ventas/ventas.module.js';
+import { DireccionesModule } from './direcciones/direccion.module.js';
+import { CajasModule } from './cajas/caja.module.js';
+import { CarritosModule } from './carritos/carrito.module.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -30,8 +37,14 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     }),
     AuthModule,
     UsersModule,
-    ProductsModule,
     PrismaModule,
+    RolesModule,
+    CategoriasModule,
+    ProductosModule,
+    VentasModule,
+    DireccionesModule,
+    CajasModule,
+    CarritosModule,
   ],
   controllers: [AppController],
   providers: [AppService],

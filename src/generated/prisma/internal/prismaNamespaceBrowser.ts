@@ -51,8 +51,16 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
-  User: 'User',
-  Product: 'Product'
+  Rol: 'Rol',
+  Usuario: 'Usuario',
+  Direccion: 'Direccion',
+  Categoria: 'Categoria',
+  Producto: 'Producto',
+  Caja: 'Caja',
+  Carrito: 'Carrito',
+  DetalleCarrito: 'DetalleCarrito',
+  VentaOrden: 'VentaOrden',
+  DetalleVentaOrden: 'DetalleVentaOrden'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -71,28 +79,117 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
-export const UserScalarFieldEnum = {
+export const RolScalarFieldEnum = {
   id: 'id',
-  name: 'name',
+  nombre: 'nombre'
+} as const
+
+export type RolScalarFieldEnum = (typeof RolScalarFieldEnum)[keyof typeof RolScalarFieldEnum]
+
+
+export const UsuarioScalarFieldEnum = {
+  id: 'id',
+  rolId: 'rolId',
   email: 'email',
-  password: 'password',
-  role: 'role',
+  passwordHash: 'passwordHash',
+  nombre: 'nombre',
+  telefono: 'telefono',
   creadoEn: 'creadoEn'
 } as const
 
-export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+export type UsuarioScalarFieldEnum = (typeof UsuarioScalarFieldEnum)[keyof typeof UsuarioScalarFieldEnum]
 
 
-export const ProductScalarFieldEnum = {
+export const DireccionScalarFieldEnum = {
   id: 'id',
-  name: 'name',
-  price: 'price',
-  description: 'description',
+  usuarioId: 'usuarioId',
+  direccionLinea: 'direccionLinea',
+  referencia: 'referencia',
+  ciudad: 'ciudad'
+} as const
+
+export type DireccionScalarFieldEnum = (typeof DireccionScalarFieldEnum)[keyof typeof DireccionScalarFieldEnum]
+
+
+export const CategoriaScalarFieldEnum = {
+  id: 'id',
+  nombre: 'nombre',
+  descripcion: 'descripcion'
+} as const
+
+export type CategoriaScalarFieldEnum = (typeof CategoriaScalarFieldEnum)[keyof typeof CategoriaScalarFieldEnum]
+
+
+export const ProductoScalarFieldEnum = {
+  id: 'id',
+  categoriaId: 'categoriaId',
+  sku: 'sku',
+  nombre: 'nombre',
+  precioCompra: 'precioCompra',
+  precioVenta: 'precioVenta',
   stock: 'stock',
+  activo: 'activo'
+} as const
+
+export type ProductoScalarFieldEnum = (typeof ProductoScalarFieldEnum)[keyof typeof ProductoScalarFieldEnum]
+
+
+export const CajaScalarFieldEnum = {
+  id: 'id',
+  usuarioId: 'usuarioId',
+  montoApertura: 'montoApertura',
+  montoCierre: 'montoCierre',
+  fechaApertura: 'fechaApertura',
+  fechaCierre: 'fechaCierre',
+  estado: 'estado'
+} as const
+
+export type CajaScalarFieldEnum = (typeof CajaScalarFieldEnum)[keyof typeof CajaScalarFieldEnum]
+
+
+export const CarritoScalarFieldEnum = {
+  id: 'id',
+  usuarioId: 'usuarioId'
+} as const
+
+export type CarritoScalarFieldEnum = (typeof CarritoScalarFieldEnum)[keyof typeof CarritoScalarFieldEnum]
+
+
+export const DetalleCarritoScalarFieldEnum = {
+  id: 'id',
+  carritoId: 'carritoId',
+  productoId: 'productoId',
+  cantidad: 'cantidad'
+} as const
+
+export type DetalleCarritoScalarFieldEnum = (typeof DetalleCarritoScalarFieldEnum)[keyof typeof DetalleCarritoScalarFieldEnum]
+
+
+export const VentaOrdenScalarFieldEnum = {
+  id: 'id',
+  usuarioId: 'usuarioId',
+  cajaId: 'cajaId',
+  direccionId: 'direccionId',
+  tipoOrigen: 'tipoOrigen',
+  estado: 'estado',
+  metodoPago: 'metodoPago',
+  total: 'total',
   creadoEn: 'creadoEn'
 } as const
 
-export type ProductScalarFieldEnum = (typeof ProductScalarFieldEnum)[keyof typeof ProductScalarFieldEnum]
+export type VentaOrdenScalarFieldEnum = (typeof VentaOrdenScalarFieldEnum)[keyof typeof VentaOrdenScalarFieldEnum]
+
+
+export const DetalleVentaOrdenScalarFieldEnum = {
+  id: 'id',
+  ventaOrdenId: 'ventaOrdenId',
+  productoId: 'productoId',
+  cantidad: 'cantidad',
+  precioUnitario: 'precioUnitario',
+  subtotal: 'subtotal'
+} as const
+
+export type DetalleVentaOrdenScalarFieldEnum = (typeof DetalleVentaOrdenScalarFieldEnum)[keyof typeof DetalleVentaOrdenScalarFieldEnum]
 
 
 export const SortOrder = {

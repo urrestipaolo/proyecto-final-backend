@@ -13,25 +13,183 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Role{
+// ==========================================
+// ENUMS (Tipos de datos definidos para el negocio)
+// ==========================================
+
+enum RolEnum {
   ADMIN
-  USER
+  CAJERO
+  CLIENTE
 }
-model User{
-  id Int @id @default(autoincrement())
-  name String 
-  email String @unique
-  password String
-  role Role @default(USER)
-  creadoEn DateTime @default(now())
+
+enum TipoOrigenEnum {
+  POS
+  WEB
+}
+
+enum EstadoOrdenEnum {
+  PENDIENTE
+  PAGADO
+  EN_CAMINO
+  ENTREGADO
+  CANCELADO
+}
+
+enum MetodoPagoEnum {
+  EFECTIVO
+  TARJETA
+  TRANSFERENCIA_QR
+}
+
+enum EstadoCajaEnum {
+  ABIERTA
+  CERRADA
+}
+
+// ==========================================
+// MÓDULO 1: USUARIOS, ROLES Y DIRECCIONES (3 Tablas)
+// ==========================================
+
+model Rol {
+  id       Int       @id @default(autoincrement())
+  nombre   RolEnum   @unique
+  usuarios Usuario[]
+
+  @@map("roles")
+}
+
+model Usuario {
+  id            Int          @id @default(autoincrement())
+  rolId         Int          @map("rol_id")
+  rol           Rol          @relation(fields: [rolId], references: [id])
+  email         String       @unique
+  passwordHash  String       @map("password_hash")
+  nombre        String
+  telefono      String?
+  direcciones   Direccion[]
+  carritos      Carrito[]
+  ventasOrdenes VentaOrden[]
+  cajas         Caja[]
+  creadoEn      DateTime     @default(now()) @map("creado_en")
+
   @@map("usuarios")
 }
-model Product{
- id Int @id @default(autoincrement())
- name String 
- price Decimal @db.Decimal(10,2)
- description String?
- stock Int @default(0)
- creadoEn DateTime @default(now())
- @@map("productos")
+
+model Direccion {
+  id            Int          @id @default(autoincrement())
+  usuarioId     Int          @map("usuario_id")
+  usuario       Usuario      @relation(fields: [usuarioId], references: [id])
+  direccionLinea String      @map("direccion_linea")
+  referencia    String?
+  ciudad        String
+  ventasOrdenes VentaOrden[]
+
+  @@map("direcciones")
+}
+
+// ==========================================
+// MÓDULO 2: CATÁLOGO E INVENTARIO (2 Tablas)
+// ==========================================
+
+model Categoria {
+  id          Int        @id @default(autoincrement())
+  nombre      String     @unique
+  descripcion String?
+  productos   Producto[]
+
+  @@map("categorias")
+}
+
+model Producto {
+  id              Int                 @id @default(autoincrement())
+  categoriaId     Int                 @map("categoria_id")
+  categoria       Categoria           @relation(fields: [categoriaId], references: [id])
+  sku             String              @unique
+  nombre          String
+  precioCompra    Decimal             @map("precio_compra") @db.Decimal(10, 2)
+  precioVenta     Decimal             @map("precio_venta") @db.Decimal(10, 2)
+  stock           Int
+  activo          Boolean             @default(true)
+  detallesVenta   DetalleVentaOrden[]
+  detallesCarrito DetalleCarrito[]
+
+  @@map("productos")
+}
+
+// ==========================================
+// MÓDULO 3: FLUJO DE CAJA POS (1 Tabla)
+// ==========================================
+
+model Caja {
+  id            Int          @id @default(autoincrement())
+  usuarioId     Int          @map("usuario_id")
+  usuario       Usuario      @relation(fields: [usuarioId], references: [id])
+  montoApertura Decimal      @map("monto_apertura") @db.Decimal(10, 2)
+  montoCierre   Decimal?     @map("monto_cierre") @db.Decimal(10, 2)
+  fechaApertura DateTime     @default(now()) @map("fecha_apertura")
+  fechaCierre   DateTime?    @map("fecha_cierre")
+  estado        EstadoCajaEnum @default(ABIERTA)
+  ventas        VentaOrden[]
+
+  @@map("cajas")
+}
+
+// ==========================================
+// MÓDULO 4: CARRITO WEB (2 Tablas)
+// ==========================================
+
+model Carrito {
+  id        Int              @id @default(autoincrement())
+  usuarioId Int              @unique @map("usuario_id")
+  usuario   Usuario          @relation(fields: [usuarioId], references: [id])
+  detalles  DetalleCarrito[]
+
+  @@map("carritos")
+}
+
+model DetalleCarrito {
+  id         Int      @id @default(autoincrement())
+  carritoId  Int      @map("carrito_id")
+  carrito    Carrito  @relation(fields: [carritoId], references: [id], onDelete: Cascade)
+  productoId Int      @map("producto_id")
+  producto   Producto @relation(fields: [productoId], references: [id])
+  cantidad   Int
+
+  @@map("detalle_carrito")
+}
+
+// ==========================================
+// MÓDULO 5: VENTAS Y ÓRDENES - POS + E-COMMERCE (2 Tablas)
+// ==========================================
+
+model VentaOrden {
+  id          Int                 @id @default(autoincrement())
+  usuarioId   Int                 @map("usuario_id")
+  usuario     Usuario             @relation(fields: [usuarioId], references: [id])
+  cajaId      Int?                @map("caja_id")
+  caja        Caja?               @relation(fields: [cajaId], references: [id])
+  direccionId Int?                @map("direccion_id")
+  direccion   Direccion?          @relation(fields: [direccionId], references: [id])
+  tipoOrigen  TipoOrigenEnum      @map("tipo_origen")
+  estado      EstadoOrdenEnum     @default(PENDIENTE)
+  metodoPago  MetodoPagoEnum      @map("metodo_pago")
+  total       Decimal             @db.Decimal(10, 2)
+  detalles    DetalleVentaOrden[]
+  creadoEn    DateTime            @default(now()) @map("creado_en")
+
+  @@map("ventas_ordenes")
+}
+
+model DetalleVentaOrden {
+  id             Int        @id @default(autoincrement())
+  ventaOrdenId   Int        @map("venta_orden_id")
+  ventaOrden     VentaOrden @relation(fields: [ventaOrdenId], references: [id], onDelete: Cascade)
+  productoId     Int        @map("producto_id")
+  producto       Producto   @relation(fields: [productoId], references: [id])
+  cantidad       Int
+  precioUnitario Decimal    @map("precio_unitario") @db.Decimal(10, 2)
+  subtotal       Decimal    @db.Decimal(10, 2)
+
+  @@map("detalle_ventas_ordenes")
 }

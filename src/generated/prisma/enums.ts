@@ -9,9 +9,46 @@
 * 🟢 You can import this file directly.
 */
 
-export const Role = {
+export const RolEnum = {
   ADMIN: 'ADMIN',
-  USER: 'USER'
+  CAJERO: 'CAJERO',
+  CLIENTE: 'CLIENTE'
 } as const
 
-export type Role = (typeof Role)[keyof typeof Role]
+export type RolEnum = (typeof RolEnum)[keyof typeof RolEnum]
+
+
+export const TipoOrigenEnum = {
+  POS: 'POS',
+  WEB: 'WEB'
+} as const
+
+export type TipoOrigenEnum = (typeof TipoOrigenEnum)[keyof typeof TipoOrigenEnum]
+
+
+export const EstadoOrdenEnum = {
+  PENDIENTE: 'PENDIENTE',
+  PAGADO: 'PAGADO',
+  EN_CAMINO: 'EN_CAMINO',
+  ENTREGADO: 'ENTREGADO',
+  CANCELADO: 'CANCELADO'
+} as const
+
+export type EstadoOrdenEnum = (typeof EstadoOrdenEnum)[keyof typeof EstadoOrdenEnum]
+
+
+export const MetodoPagoEnum = {
+  EFECTIVO: 'EFECTIVO',
+  TARJETA: 'TARJETA',
+  TRANSFERENCIA_QR: 'TRANSFERENCIA_QR'
+} as const
+
+export type MetodoPagoEnum = (typeof MetodoPagoEnum)[keyof typeof MetodoPagoEnum]
+
+
+export const EstadoCajaEnum = {
+  ABIERTA: 'ABIERTA',
+  CERRADA: 'CERRADA'
+} as const
+
+export type EstadoCajaEnum = (typeof EstadoCajaEnum)[keyof typeof EstadoCajaEnum]

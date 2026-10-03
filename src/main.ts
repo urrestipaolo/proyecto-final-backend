@@ -20,8 +20,8 @@ async function bootstrap() {
     }),
   );
   const config = new DocumentBuilder()
-    .setTitle('Api de usuarios y productos funvaleros :D')
-    .setDescription('api de los estudiantes de funval')
+    .setTitle('Api de Comercio')
+    .setDescription('Api de comercio de pagos')
     .setVersion('1.0.0')
     .addBearerAuth(
       {

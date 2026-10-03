@@ -4,7 +4,7 @@ import {
   Inject,
   forwardRef,
 } from '@nestjs/common';
-import * as bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { UsersService } from '../users/users.service.js';
 import { CreateUserDto } from '../users/dto/create-user.dto.js';
@@ -27,7 +27,7 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Credenciales Invalidas');
     }
-    const isMatch = await bcrypt.compare(LoginDto.password, user.password);
+    const isMatch = await bcrypt.compare(LoginDto.password, user.passwordHash);
     if (!isMatch) {
       throw new UnauthorizedException('Credenciales Invalidas');
     }
@@ -37,7 +37,7 @@ export class AuthService {
       expiresIn: expiresIn as SignOptions['expiresIn'],
     };
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role, name: user.name },
+      { id: user.id, email: user.email, role: user.rol, name: user.nombre },
       secret,
       options,
     );
