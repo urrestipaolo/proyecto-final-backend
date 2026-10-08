@@ -15,8 +15,8 @@ export class ProductosController {
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth('JWT-auth')
   @Roles(RolEnum.ADMIN)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Crear un nuevo producto (Solo Admin)' })
   create(@Body() createProductoDto: CreateProductoDto) {
     return this.productosService.create(createProductoDto);
@@ -36,8 +36,8 @@ export class ProductosController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth('JWT-auth')
   @Roles(RolEnum.ADMIN)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Actualizar producto (Solo Admin)' })
   update(@Param('id', ParseIntPipe) id: number, @Body() updateProductoDto: UpdateProductoDto) {
     return this.productosService.update(id, updateProductoDto);
@@ -45,8 +45,8 @@ export class ProductosController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth('JWT-auth')
   @Roles(RolEnum.ADMIN)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Eliminar un producto (Solo Admin)' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.productosService.remove(id);

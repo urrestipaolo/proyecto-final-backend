@@ -1,81 +1,171 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { EstadoOrdenEnum } from '../generated/prisma/enums.js';
+import { CreateVentaDto } from './dto/create-ventas.dto.js';
+import { CheckoutDto } from './dto/checkout.dto.js';
+import { EstadoOrdenEnum, TipoOrigenEnum } from '../generated/prisma/enums.js';
+import type { Prisma } from '../generated/prisma/client.js';
+
+const INCLUDE_VENTA = {
+  usuario: { select: { id: true, nombre: true, email: true } },
+  detalles: { include: { producto: true } },
+} as const;
+
+type ItemVenta = { productoId: number; cantidad: number };
 
 @Injectable()
 export class VentasService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(dto: any) {
-    const {
-      usuarioId,
-      cajaId,
-      direccionId,
-      tipoOrigen,
-      metodoPago,
-      detalles,
-    } = dto;
+  // Venta directa (POS): los productos vienen en el body
+  async create(dto: CreateVentaDto) {
+    const { clienteId, tipoOrigen, metodoPago, detalles } = dto;
 
-    // 1. Validar que detalles sea un arreglo válido
-    if (!detalles || !Array.isArray(detalles) || detalles.length === 0) {
-      throw new BadRequestException('Debe incluir al menos un producto en detalles');
+    if (!detalles || detalles.length === 0) {
+      throw new BadRequestException('La venta debe incluir al menos un producto');
     }
 
-    // 2. Calcular total de la venta
-    const total = detalles.reduce(
-      (acc: number, item: any) => acc + (Number(item.cantidad) * Number(item.precioUnitario)),
-      0,
-    );
+    const usuario = await this.prisma.usuario.findUnique({ where: { id: clienteId } });
+    if (!usuario) {
+      throw new BadRequestException(`El cliente con ID ${clienteId} no existe`);
+    }
 
-    // 3. Construir el objeto de datos filtrando valores nulos para Prisma
-    const dataToCreate: any = {
-      usuarioId: Number(usuarioId),
-      tipoOrigen,
-      metodoPago,
-      total,
-      estado: EstadoOrdenEnum.PENDIENTE,
-      detalles: {
-        create: detalles.map((d: any) => ({
-          productoId: Number(d.productoId),
-          cantidad: Number(d.cantidad),
-          precioUnitario: Number(d.precioUnitario),
-          subtotal: Number(d.cantidad) * Number(d.precioUnitario),
-        })),
-      },
-    };
+    return this.prisma.$transaction(async (tx) => {
+      const { total, lineas } = await this.descontarStockYCalcular(tx, detalles);
 
-    // Solo agregar cajaId y direccionId si realmente tienen valor (no null/undefined)
-    if (cajaId) dataToCreate.cajaId = Number(cajaId);
-    if (direccionId) dataToCreate.direccionId = Number(direccionId);
+      return tx.ventaOrden.create({
+        data: {
+          usuarioId: clienteId,
+          tipoOrigen,
+          metodoPago,
+          estado:
+            tipoOrigen === TipoOrigenEnum.POS
+              ? EstadoOrdenEnum.PAGADO
+              : EstadoOrdenEnum.PENDIENTE,
+          total,
+          detalles: { create: lineas },
+        },
+        include: INCLUDE_VENTA,
+      });
+    });
+  }
 
-    try {
-      const ventaOrden = await this.prisma.ventaOrden.create({
-        data: dataToCreate,
+  // Compra web: los productos salen del carrito del usuario autenticado
+  async checkout(usuarioId: number, dto: CheckoutDto) {
+    return this.prisma.$transaction(async (tx) => {
+      const carrito = await tx.carrito.findUnique({
+        where: { usuarioId },
         include: { detalles: true },
       });
 
-      return ventaOrden;
-    } catch (error) {
-      // Si falla Prisma (por ejemplo por una clave foránea inexistente)
-      console.error('Error de Prisma al crear venta:', error);
-      throw new BadRequestException(
-        `Error al registrar la venta en la base de datos: ${'Verifica que los IDs (usuario, caja, dirección, productos) existan.'}`
-      );
-    }
+      if (!carrito || carrito.detalles.length === 0) {
+        throw new BadRequestException('El carrito está vacío');
+      }
+
+      if (dto.direccionId) {
+        const direccion = await tx.direccion.findFirst({
+          where: { id: dto.direccionId, usuarioId },
+        });
+        if (!direccion) {
+          throw new BadRequestException(
+            'La dirección no existe o no pertenece al usuario',
+          );
+        }
+      }
+
+      // Se vacía el carrito primero. Si otra petición (doble clic) ya lo consumió,
+      // el conteo no coincide y se aborta, evitando dos órdenes del mismo carrito.
+      const { count } = await tx.detalleCarrito.deleteMany({
+        where: { id: { in: carrito.detalles.map((d) => d.id) } },
+      });
+      if (count !== carrito.detalles.length) {
+        throw new ConflictException('El carrito ya fue procesado');
+      }
+
+      const { total, lineas } = await this.descontarStockYCalcular(tx, carrito.detalles);
+
+      return tx.ventaOrden.create({
+        data: {
+          usuarioId,
+          direccionId: dto.direccionId,
+          tipoOrigen: TipoOrigenEnum.WEB,
+          metodoPago: dto.metodoPago,
+          estado: EstadoOrdenEnum.PENDIENTE,
+          total,
+          detalles: { create: lineas },
+        },
+        include: INCLUDE_VENTA,
+      });
+    });
   }
 
-  async actualizarEstadoPago(ventaOrdenId: number, estado: EstadoOrdenEnum) {
-    const orden = await this.prisma.ventaOrden.findUnique({
-      where: { id: ventaOrdenId },
+  async findAll() {
+    return this.prisma.ventaOrden.findMany({
+      include: INCLUDE_VENTA,
+      orderBy: { creadoEn: 'desc' },
     });
+  }
 
-    if (!orden) {
-      throw new NotFoundException(`La orden #${ventaOrdenId} no existe`);
+  async findOne(id: number) {
+    const venta = await this.prisma.ventaOrden.findUnique({
+      where: { id },
+      include: INCLUDE_VENTA,
+    });
+    if (!venta) {
+      throw new NotFoundException(`Venta con ID ${id} no encontrada`);
+    }
+    return venta;
+  }
+
+  private async descontarStockYCalcular(
+    tx: Prisma.TransactionClient,
+    items: ItemVenta[],
+  ) {
+    let total = 0;
+    const lineas: {
+      productoId: number;
+      cantidad: number;
+      precioUnitario: number;
+      subtotal: number;
+    }[] = [];
+
+    for (const item of items) {
+      const producto = await tx.producto.findUnique({ where: { id: item.productoId } });
+
+      if (!producto) {
+        throw new NotFoundException(`Producto con ID ${item.productoId} no encontrado`);
+      }
+      if (!producto.activo) {
+        throw new BadRequestException(`El producto '${producto.nombre}' no está disponible`);
+      }
+
+      // Descuento atómico: solo actualiza si todavía hay stock suficiente
+      const { count } = await tx.producto.updateMany({
+        where: { id: producto.id, stock: { gte: item.cantidad } },
+        data: { stock: { decrement: item.cantidad } },
+      });
+      if (count === 0) {
+        throw new BadRequestException(
+          `Stock insuficiente para el producto '${producto.nombre}'`,
+        );
+      }
+
+      const precioUnitario = Number(producto.precioVenta);
+      const subtotal = Math.round(precioUnitario * item.cantidad * 100) / 100;
+      total += subtotal;
+
+      lineas.push({
+        productoId: producto.id,
+        cantidad: item.cantidad,
+        precioUnitario,
+        subtotal,
+      });
     }
 
-    return await this.prisma.ventaOrden.update({
-      where: { id: ventaOrdenId },
-      data: { estado },
-    });
+    return { total: Math.round(total * 100) / 100, lineas };
   }
 }

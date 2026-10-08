@@ -1,4 +1,3 @@
-// src/carritos/carritos.controller.ts
 import { Controller, Get, Post, Delete, Body, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CarritosService } from './carrito.service.js';
@@ -8,7 +7,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 @ApiTags('Carritos E-commerce')
 @Controller('carritos')
 @UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
+@ApiBearerAuth('JWT-auth')
 export class CarritosController {
   constructor(private readonly carritosService: CarritosService) {}
 

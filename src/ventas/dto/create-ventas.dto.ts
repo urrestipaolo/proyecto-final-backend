@@ -1,4 +1,4 @@
-import { IsArray, IsEnum, IsNotEmpty, IsNumber, ValidateNested } from 'class-validator';
+import { ArrayMinSize, IsArray, IsEnum, IsNotEmpty, IsNumber, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { TipoOrigenEnum, MetodoPagoEnum } from '../../generated/prisma/enums.js';
@@ -30,6 +30,7 @@ export class CreateVentaDto {
 
   @ApiProperty({ type: [CreateDetalleVentaDto], description: 'Lista de productos a comprar' })
   @IsArray()
+  @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => CreateDetalleVentaDto)
   detalles: CreateDetalleVentaDto[];

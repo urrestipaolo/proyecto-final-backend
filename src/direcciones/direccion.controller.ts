@@ -9,7 +9,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 @ApiTags('Direcciones')
 @Controller('direcciones')
 @UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
+@ApiBearerAuth('JWT-auth')
 export class DireccionesController {
   constructor(private readonly direccionesService: DireccionesService) {}
 

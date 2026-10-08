@@ -12,7 +12,7 @@ import { RolEnum } from '../generated/prisma/enums.js';
 @ApiTags('Cajas POS')
 @Controller('cajas')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@ApiBearerAuth()
+@ApiBearerAuth('JWT-auth')
 export class CajasController {
   constructor(private readonly cajasService: CajasService) {}
 

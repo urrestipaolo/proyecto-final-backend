@@ -37,7 +37,7 @@ export class AuthService {
       expiresIn: expiresIn as SignOptions['expiresIn'],
     };
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.rol, name: user.nombre },
+      { id: user.id, email: user.email, role: user.rol.nombre, name: user.nombre },
       secret,
       options,
     );

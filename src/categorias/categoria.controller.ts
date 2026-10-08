@@ -15,8 +15,8 @@ export class CategoriasController {
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth('JWT-auth')
   @Roles(RolEnum.ADMIN)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Crear categoría (Solo Admin)' })
   create(@Body() createCategoriaDto: CreateCategoriaDto) {
     return this.categoriasService.create(createCategoriaDto);
@@ -36,8 +36,8 @@ export class CategoriasController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth('JWT-auth')
   @Roles(RolEnum.ADMIN)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Actualizar categoría (Solo Admin)' })
   update(@Param('id', ParseIntPipe) id: number, @Body() updateCategoriaDto: UpdateCategoriaDto) {
     return this.categoriasService.update(id, updateCategoriaDto);
@@ -45,8 +45,8 @@ export class CategoriasController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth('JWT-auth')
   @Roles(RolEnum.ADMIN)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Eliminar categoría (Solo Admin)' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.categoriasService.remove(id);

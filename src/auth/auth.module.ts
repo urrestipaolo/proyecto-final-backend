@@ -17,7 +17,7 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
      JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') || 'la-super-duper-mega-secreta-contrasena-del-mundo',
+        secret: configService.getOrThrow('JWT_SECRET'),
         signOptions: { expiresIn: '1d' },
       }),
       inject: [ConfigService],

@@ -1,14 +1,14 @@
-import { IsNotEmpty, IsNumber, Min } from 'class-validator';
+import { IsIn, IsInt, IsNotEmpty, IsNumber, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateDetalleVentaDto {
   @ApiProperty({ example: 1, description: 'ID del producto a vender' })
-  @IsNumber()
+  @IsInt()
   @IsNotEmpty()
   productoId: number;
 
   @ApiProperty({ example: 2, description: 'Cantidad comprada' })
-  @IsNumber()
+  @IsInt()
   @Min(1)
   cantidad: number;
 }
