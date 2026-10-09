@@ -14,6 +14,9 @@ export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RolEnum.ADMIN)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Crear un nuevo rol (Solo Admin)' })
   create(@Body() createRoleDto: CreateRoleDto) {
     return this.rolesService.create(createRoleDto);
@@ -35,7 +38,7 @@ export class RolesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RolEnum.ADMIN)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Actualizar rol (todos)' })
+  @ApiOperation({ summary: 'Actualizar rol (solo Admin)' })
   update(@Param('id', ParseIntPipe) id: number, @Body() updateRoleDto: UpdateRoleDto) {
     return this.rolesService.update(id, updateRoleDto);
   }
