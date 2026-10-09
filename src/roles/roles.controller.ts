@@ -14,13 +14,10 @@ export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(RolEnum.ADMIN)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Crear un nuevo rol (Solo Admin)' })
   create(@Body() createRoleDto: CreateRoleDto) {
     return this.rolesService.create(createRoleDto);
-  }
+  } 
 
   @Get()
   @ApiOperation({ summary: 'Obtener todos los roles' })
@@ -37,8 +34,8 @@ export class RolesController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RolEnum.ADMIN)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Actualizar rol (Solo Admin)' })
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Actualizar rol (todos)' })
   update(@Param('id', ParseIntPipe) id: number, @Body() updateRoleDto: UpdateRoleDto) {
     return this.rolesService.update(id, updateRoleDto);
   }
@@ -46,7 +43,7 @@ export class RolesController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RolEnum.ADMIN)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Eliminar rol (Solo Admin)' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.rolesService.remove(id);
