@@ -121,6 +121,29 @@ export class VentasService {
     return venta;
   }
 
+  async payment(){
+    const response = await fetch("https://api-mock-payment.funvaltech.cloud/api/v1/payments", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer sk_sandbox_...",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+      amount: 120.50,
+      currency: "USD",
+      metadata: {
+        order_id: "ORD-54321"
+      }
+      })
+    });
+
+  const { checkout_url } = await response.json();
+   // Redirige al cliente hacia checkout_url
+    console.log(checkout_url);
+  }
+
+  // ----------------------------------------------------------
+
   private async descontarStockYCalcular(
     tx: Prisma.TransactionClient,
     items: ItemVenta[],
